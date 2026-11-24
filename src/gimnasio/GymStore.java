@@ -11,14 +11,15 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static gimnasio.PropertiesFile.count;
+import static gimnasio.PropertiesFile.required;
 
 final class GymStore implements AutoCloseable {
     private final Path file;
     private final FileChannel lockChannel;
+    private final BusinessStore business;
     private List<Member> members = List.of();
     private List<Visit> visits = List.of();
 
@@ -31,6 +32,7 @@ final class GymStore implements AutoCloseable {
                 throw new IOException("Ya hay una instancia del gimnasio usando esta carpeta.");
             }
             load();
+            business = new BusinessStore(directory.resolve("negocio.properties"));
         } catch (IOException | RuntimeException error) {
             try {
                 lockChannel.close();
@@ -39,6 +41,10 @@ final class GymStore implements AutoCloseable {
             }
             throw error;
         }
+    }
+
+    BusinessStore business() {
+        return business;
     }
 
     List<Member> members() {
@@ -89,9 +95,8 @@ final class GymStore implements AutoCloseable {
         if (Files.notExists(file)) {
             return;
         }
-        try (var reader = Files.newBufferedReader(file)) {
-            Properties data = new Properties();
-            data.load(reader);
+        try {
+            Properties data = PropertiesFile.read(file);
             List<Member> loadedMembers = new ArrayList<>();
             int memberCount = count(data, "members");
             for (int index = 0; index < memberCount; index++) {
@@ -119,22 +124,6 @@ final class GymStore implements AutoCloseable {
         }
     }
 
-    private static String required(Properties data, String key) {
-        String value = data.getProperty(key);
-        if (value == null) {
-            throw new IllegalArgumentException("Falta el campo " + key);
-        }
-        return value;
-    }
-
-    private static int count(Properties data, String key) {
-        int total = Integer.parseInt(required(data, key));
-        if (total < 0) {
-            throw new IllegalArgumentException("Cantidad inválida en " + key);
-        }
-        return total;
-    }
-
     private void save(List<Member> updatedMembers, List<Visit> updatedVisits) throws IOException {
         Properties data = new Properties();
         data.setProperty("members", Integer.toString(updatedMembers.size()));
@@ -156,15 +145,7 @@ final class GymStore implements AutoCloseable {
             data.setProperty(key + "timestamp", visit.enteredAt().toString());
         }
 
-        Path temporary = Files.createTempFile(file.getParent(), "gimnasio-", ".tmp");
-        try {
-            try (var writer = Files.newBufferedWriter(temporary)) {
-                data.store(writer, "Gestión de gimnasio");
-            }
-            Files.move(temporary, file, ATOMIC_MOVE, REPLACE_EXISTING);
-        } finally {
-            Files.deleteIfExists(temporary);
-        }
+        PropertiesFile.write(file, data);
         members = List.copyOf(updatedMembers);
         visits = List.copyOf(updatedVisits);
     }

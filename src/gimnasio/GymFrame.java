@@ -46,6 +46,7 @@ final class GymFrame extends JFrame {
     private static final DateTimeFormatter VISIT_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final GymStore store;
+    private final BusinessPanel business;
     private final DefaultTableModel memberModel =
             readOnlyModel("Nombre", "Documento", "Plan", "Vencimiento", "Estado");
     private final DefaultTableModel visitModel = readOnlyModel("Fecha y hora", "Nombre", "Documento");
@@ -65,8 +66,9 @@ final class GymFrame extends JFrame {
     private LocalDate displayedDate;
 
     GymFrame(GymStore store) {
-        super("Gestión de gimnasio");
+        super("Gestión de negocio");
         this.store = store;
+        business = new BusinessPanel(store.business());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(940, 580));
         setSize(1100, 690);
@@ -80,6 +82,7 @@ final class GymFrame extends JFrame {
         new Timer(30_000, event -> {
             if (!LocalDate.now().equals(displayedDate)) {
                 refresh(selectedMember());
+                business.refreshSummary();
             }
         }).start();
     }
@@ -88,7 +91,7 @@ final class GymFrame extends JFrame {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(NAVY);
         header.setBorder(BorderFactory.createEmptyBorder(20, 26, 20, 26));
-        header.add(label("Gestión de gimnasio", 27, Font.BOLD, Color.WHITE), BorderLayout.WEST);
+        header.add(label("Gestión de negocio", 27, Font.BOLD, Color.WHITE), BorderLayout.WEST);
         header.add(date, BorderLayout.EAST);
 
         JPanel metrics = new JPanel(new GridLayout(1, 3, 14, 0));
@@ -105,12 +108,21 @@ final class GymFrame extends JFrame {
         history.add(tablePane(visitTable));
         tabs.addTab("Historial de ingresos", history);
 
-        JPanel body = new JPanel(new BorderLayout(0, 16));
+        JPanel gym = new JPanel(new BorderLayout(0, 16));
+        gym.setOpaque(false);
+        gym.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
+        gym.add(metrics, BorderLayout.NORTH);
+        gym.add(tabs, BorderLayout.CENTER);
+        gym.add(feedback, BorderLayout.SOUTH);
+
+        JTabbedPane sections = new JTabbedPane();
+        sections.addTab("Gimnasio", gym);
+        sections.addTab("Negocio", business);
+
+        JPanel body = new JPanel(new BorderLayout());
         body.setBackground(SURFACE);
         body.setBorder(BorderFactory.createEmptyBorder(18, 24, 14, 24));
-        body.add(metrics, BorderLayout.NORTH);
-        body.add(tabs, BorderLayout.CENTER);
-        body.add(feedback, BorderLayout.SOUTH);
+        body.add(sections, BorderLayout.CENTER);
 
         JPanel root = new JPanel(new BorderLayout());
         root.add(header, BorderLayout.NORTH);
@@ -165,7 +177,7 @@ final class GymFrame extends JFrame {
         return panel;
     }
 
-    private static JPanel metric(String title, JLabel value) {
+    static JPanel metric(String title, JLabel value) {
         JPanel card = new JPanel(new BorderLayout(0, 4));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(BORDER),
@@ -175,14 +187,14 @@ final class GymFrame extends JFrame {
         return card;
     }
 
-    private static JLabel label(String text, int size, int style, Color color) {
+    static JLabel label(String text, int size, int style, Color color) {
         JLabel label = new JLabel(text);
         label.setFont(label.getFont().deriveFont(style, (float) size));
         label.setForeground(color);
         return label;
     }
 
-    private static DefaultTableModel readOnlyModel(String... columns) {
+    static DefaultTableModel readOnlyModel(String... columns) {
         return new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -191,7 +203,7 @@ final class GymFrame extends JFrame {
         };
     }
 
-    private static JTable table(DefaultTableModel model, String name) {
+    static JTable table(DefaultTableModel model, String name) {
         JTable table = new JTable(model);
         table.getAccessibleContext().setAccessibleName(name);
         table.setRowHeight(31);
@@ -201,7 +213,7 @@ final class GymFrame extends JFrame {
         return table;
     }
 
-    private static JScrollPane tablePane(JTable table) {
+    static JScrollPane tablePane(JTable table) {
         JScrollPane pane = new JScrollPane(table);
         pane.setBorder(BorderFactory.createLineBorder(BORDER));
         return pane;

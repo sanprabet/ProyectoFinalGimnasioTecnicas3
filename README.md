@@ -1,8 +1,15 @@
-# Gestión de gimnasio
+# Gestión de negocio y gimnasio
 
-Aplicación de escritorio escrita en Java 21 con Swing. La ventana principal es un `JFrame` y el formulario de socios usa un `JDialog`. Se compila con las herramientas del JDK y guarda los datos en un archivo local.
+Aplicación de escritorio para un negocio pequeño, escrita en Java 21 con Swing. La ventana principal es un `JFrame` y los formularios se abren en diálogos. Se compila con el JDK y usa archivos locales, sin base de datos.
 
-## Funciones
+## Negocio
+
+- Agregar y editar productos y servicios con un código único y un precio en pesos colombianos (COP).
+- Consultar y ajustar las existencias de cada producto. Las ventas descuentan unidades y se rechazan cuando el inventario es insuficiente.
+- Registrar ventas por artículo, cantidad y medio de pago. El historial conserva el precio aplicado a cada venta.
+- Registrar gastos por fecha y concepto. El resumen mensual muestra ventas, gastos y el saldo calculado como la diferencia entre ambos.
+
+## Gimnasio
 
 - Agregar, editar, buscar y eliminar socios. Cada documento identifica a un único socio.
 - Gestionar planes mensuales, trimestrales y anuales. La membresía es válida hasta el día de vencimiento inclusive.
@@ -17,9 +24,9 @@ Desde la raíz del repositorio, con Docker y Docker Compose disponibles, ejecuta
 docker compose up --build -d
 ```
 
-Abre [la ventana del gimnasio](http://localhost:6080/vnc.html?autoconnect=true&resize=scale) en el navegador. noVNC muestra la aplicación Swing que se ejecuta en el contenedor. Compose publica el puerto únicamente en `127.0.0.1` y configura la zona horaria `America/Bogota`. Si el puerto `6080` está ocupado, puedes cambiarlo con `GIMNASIO_PUERTO=6081 docker compose up -d` y abrir el enlace con el puerto elegido.
+Abre [la aplicación](http://localhost:6080/vnc.html?autoconnect=true&resize=scale) en el navegador. noVNC muestra la ventana Swing que se ejecuta en el contenedor. Compose publica el puerto únicamente en `127.0.0.1` y configura la zona horaria `America/Bogota`. Si el puerto `6080` está ocupado, puedes cambiarlo con `GIMNASIO_PUERTO=6081 docker compose up -d` y abrir el enlace con el puerto elegido.
 
-Para detener la aplicación, usa `docker compose down`. Los datos se conservan en el volumen `gimnasio-datos` entre reinicios. El historial también se conserva al eliminar un socio.
+Para detener la aplicación, usa `docker compose down`. El volumen `gimnasio-datos` conserva `gimnasio.properties` y `negocio.properties` entre reinicios. El historial de ingresos del gimnasio se conserva al eliminar un socio.
 
 ## Ejecutar con Java en macOS o Linux
 
