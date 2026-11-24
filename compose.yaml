@@ -1,0 +1,13 @@
+services:
+  gimnasio:
+    build: .
+    init: true
+    environment:
+      TZ: America/Bogota
+    ports:
+      - "127.0.0.1:${GIMNASIO_PUERTO:-6080}:6080"
+    volumes:
+      - gimnasio-datos:/data
+
+volumes:
+  gimnasio-datos:
